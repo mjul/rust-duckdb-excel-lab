@@ -6,6 +6,7 @@ use std::fs::File;
 
 fn xlsx_to_parquet(xlsx_path: &str, sheet_name: &str, parquet_path: &str) -> Result<()> {
     // Open the XLSX file
+    println!("Reading spreadsheet {}...", xlsx_path);
     let mut workbook: Xlsx<_> = open_workbook(xlsx_path)?;
 
     let range: Range<_> = workbook.worksheet_range(&sheet_name).map_err(|e| {
