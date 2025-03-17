@@ -3,6 +3,16 @@ name = "rust-duckdb-excel-lab"
 version = "0.1.0"
 edition = "2024"
 
+# Define the library target
+[lib]
+name = "rust_duckdb_excel_lab"  # Name of the library (used in imports as `use rust_duckdb_excel_lab;`)
+path = "src/lib.rs"             # Path to the library source file
+
+# Define the binary target (optional, since src/main.rs is the default)
+[[bin]]
+name = "rust-duckdb-excel-lab"  # Name of the executable
+path = "src/main.rs"            # Path to the binary source file
+
 [dependencies]
 calamine = "0.26.1"
 polars = { version = "0.46.0", features = ["parquet", "lazy"] }
