@@ -1,7 +1,7 @@
-use std::fs;
-use std::path::Path;
 use polars::prelude::*;
-use rust_duckdb_excel_lab::xlsx_to_parquet; // Import from the library
+use rust_duckdb_excel_lab::xlsx_to_parquet;
+use std::fs;
+use std::path::Path; // Import from the library
 
 #[test]
 fn test_xlsx_to_parquet() -> anyhow::Result<()> {
@@ -10,13 +10,24 @@ fn test_xlsx_to_parquet() -> anyhow::Result<()> {
     let sheet_name = "Data"; // Adjust if the sheet name in response_times.xlsx is different
 
     // Ensure the input file exists
-    assert!(Path::new(input_xlsx).exists(), "Input XLSX file not found at {}", input_xlsx);
+    let input_file = Path::new(input_xlsx);
+    assert!(
+        input_file.exists(),
+        "Input XLSX file not found at {}",
+        input_xlsx
+    );
+
+    let output_file = Path::new(output_parquet);
 
     // Run the conversion
-    xlsx_to_parquet(input_xlsx, sheet_name, output_parquet)?;
+    xlsx_to_parquet(&input_file, sheet_name, &output_file)?;
 
     // Verify the output file was created
-    assert!(Path::new(output_parquet).exists(), "Parquet file was not created at {}", output_parquet);
+    assert!(
+        Path::new(output_parquet).exists(),
+        "Parquet file was not created at {}",
+        output_parquet
+    );
 
     // Read and verify the Parquet file contents
     let parquet_file = fs::File::open(output_parquet)?;

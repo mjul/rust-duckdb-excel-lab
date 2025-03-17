@@ -1,12 +1,12 @@
 use anyhow::Result;
 use calamine::{Range, Reader, Xlsx, open_workbook};
-use clap::Parser;
 use polars::prelude::*;
 use std::fs::File;
+use std::path::Path;
 
-pub fn xlsx_to_parquet(xlsx_path: &str, sheet_name: &str, parquet_path: &str) -> Result<()> {
+pub fn xlsx_to_parquet(xlsx_path: &Path, sheet_name: &str, parquet_path: &Path) -> Result<()> {
     // Open the XLSX file
-    println!("Reading spreadsheet {}...", xlsx_path);
+    println!("Reading spreadsheet {}...", xlsx_path.to_string_lossy());
     let mut workbook: Xlsx<_> = open_workbook(xlsx_path)?;
 
     let range: Range<_> = workbook.worksheet_range(&sheet_name).map_err(|e| {
@@ -50,6 +50,10 @@ pub fn xlsx_to_parquet(xlsx_path: &str, sheet_name: &str, parquet_path: &str) ->
     let mut file = File::create(parquet_path)?;
     ParquetWriter::new(&mut file).finish(&mut df)?;
 
-    println!("Successfully converted {} to {}", xlsx_path, parquet_path);
+    println!(
+        "Successfully converted {} to {}",
+        xlsx_path.to_string_lossy(),
+        parquet_path.to_string_lossy()
+    );
     Ok(())
 }
