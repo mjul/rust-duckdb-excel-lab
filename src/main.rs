@@ -4,15 +4,18 @@ use clap::Parser;
 use polars::prelude::*;
 use std::fs::File;
 
-fn xlsx_to_parquet(xlsx_path: &str, parquet_path: &str) -> Result<()> {
+fn xlsx_to_parquet(xlsx_path: &str, sheet_name: &str, parquet_path: &str) -> Result<()> {
     // Open the XLSX file
     let mut workbook: Xlsx<_> = open_workbook(xlsx_path)?;
 
-    // Assume we're working with the first sheet
-    let sheet_name = workbook.sheet_names()[0].clone();
-    let range: Range<_> = workbook
-        .worksheet_range(&sheet_name)
-        .map_err(|e| anyhow::anyhow!("Sheet not found: {}, error: {}", sheet_name, e))?;
+    let range: Range<_> = workbook.worksheet_range(&sheet_name).map_err(|e| {
+        anyhow::anyhow!(
+            "Sheet not found: {}. Workbook has sheets {}. Error: {}",
+            sheet_name,
+            workbook.sheet_names().join(", "),
+            e
+        )
+    })?;
 
     // Collect headers (first row)
     let headers: Vec<String> = range
@@ -23,6 +26,8 @@ fn xlsx_to_parquet(xlsx_path: &str, parquet_path: &str) -> Result<()> {
         .map(|cell| cell.to_string())
         .collect();
 
+    println!("Reading {} rows from spreadsheet...", range.rows().count());
+
     // Collect data (remaining rows)
     let mut columns: Vec<Vec<String>> = vec![Vec::new(); headers.len()];
     for row in range.rows().skip(1) {
@@ -30,6 +35,8 @@ fn xlsx_to_parquet(xlsx_path: &str, parquet_path: &str) -> Result<()> {
             columns[i].push(cell.to_string());
         }
     }
+
+    println!("Writing Parquet file...");
 
     // Create a Polars DataFrame
     let mut df = DataFrame::default();
@@ -53,6 +60,10 @@ struct Args {
     #[arg(short, long)]
     input: String,
 
+    /// Name of the sheet with the data in the Excel workbook.
+    #[arg(short, long, default_value = "Data")]
+    sheet: String,
+
     /// Path to the output Parquet file
     #[arg(short, long)]
     output: String,
@@ -60,6 +71,6 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    xlsx_to_parquet(&args.input, &args.output)?;
+    xlsx_to_parquet(&args.input, &args.sheet, &args.output)?;
     Ok(())
 }
